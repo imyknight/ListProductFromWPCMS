@@ -6,11 +6,12 @@
 
 // You can delete this file if you're not using it
 
-const path = require(`path`)
+const path = require(`path`);
 
 exports.createPages = async ({ graphql, actions, reporter }) => {
   const {createPage} = actions;
-  const PageTemplate = path.resolve("./src/templates/Page.js")
+  const PageTemplate = path.resolve("./src/templates/Page.js");
+  const ProductTemplate = path.resolve("./src/templates/Product.js");
 
   const result = await graphql(`
     {
@@ -19,6 +20,15 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
           node {
             slug
             wordpress_id
+          }
+        }
+      }
+      allWordpressWcProducts {
+        edges {
+          node {
+            permalink
+            wordpress_id
+            name
           }
         }
       }
@@ -38,6 +48,17 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
       context: {
         id: page.node.wordpress_id
       },
+    })
+  })
+  const Products = result.data.allWordpressWcProducts.edges;
+  Products.map(product => {
+    const slug = product.node.name.toLowerCase().replace(/ /g,'-').replace(/[^\w-]+/g,'');
+    createPage({
+      path: `/product/${slug}`,
+      component: ProductTemplate,
+      context: {
+        id: product.node.wordpress_id
+      }
     })
   })
 }
